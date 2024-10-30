@@ -17,7 +17,10 @@ library(caret)
 library(GGally)
 library(vegan)
 library(iCAMP)
-library(biom)
+library(biomformat)
+library(ape)
+library(caret)
+library(corpcor)
 
 #Variance partitioning 
 
@@ -60,6 +63,8 @@ x1<-read_biom(Bac_otus)
 meta<-read.csv("metadata3.csv")
 bac<-as(biom_data(x1),"matrix")
 bac<-t(bac)
+tree<-read.tree("exported-tree/tree.tree")
+phydist<-cophenetic(tree)
 assem_bac<-qpen(comm = bac, pd = phydist, pd.big.wd = NULL,
                   pd.big.spname = NULL, tree = NULL,
                   bNTI = NULL, RC = NULL, ab.weight = TRUE,
@@ -102,7 +107,6 @@ bac_bnti1 <- decostand(bac_bnti, method="range")
 prod<-read.csv("hist-data.csv")
 prod_vp<-prod[,c(4:17)]
 
-library(caret)
 prod.impute<-preProcess(prod_vp,method="bagImpute")
 prod_vp2<-predict(prod.impute,prod_vp)
 
@@ -112,37 +116,31 @@ env_vp$PercSiteDry <- prod$PercSiteDry
 env.impute<-preProcess(env_vp,method="bagImpute")
 env_vp2<-predict(env.impute,env_vp)
 
-library(GGally)
 env_vp3 <- data.frame(scale(env_vp2))
-#ggpairs(env_vp3)
-cor2pcor(cov(env_vp3))
-
-library(corpcor)
 cor2pcor(cov(env_vp3)) #AvgEVI and AvgNDVI are colinear; proceed with AvgEVI only
 
 env_vp3 <- data.frame(env_vp2[,c(1:3,5:7)])
 cap <- capscale(as.dist(bac_bnti1) ~ .,data=env_vp3)
 ord <- ordistep(cap) #AvgLSTDay
-anova(ord) #p = 0.01
+anova(ord) #p = 0.013
 
 prod_vp3 <- data.frame(scale(prod_vp2))
-#ggpairs(prod_vp3)
-cor2pcor(cov(prod_vp3)) #PercCxFnd, PercVecFnd, AvgLarvDens, AvgAeDens, AvgCxDens, AvgNonVecDens, AvgVecDens show evidence of multicollinearity
+cor2pcor(cov(prod_vp3)) #PercLarvFnd, PercAeFnd, PercCxFnd, PercVecFnd, AvgLarvDens, AvgAeDens, AvgCxDens, AvgNonVecDens, AvgVecDens show evidence of multicollinearity
 
 prod_vp4 <- data.frame(prod_vp3[,c(1,2,4:6,7,10:12)])
 cap <- capscale(as.dist(bac_bnti1) ~ .,data=prod_vp4)
 ord <- ordistep(cap) #TotTreat, PercTreat, PercAeFnd, AvgAnDens, AvgCxDens
 anova(ord) #p = 0.001
-anova.cca(ord,by="term") #TotTreat (p = 0.001), PercTreat (p = 0.112), PercAeFnd (p = 0.016), AvgAnDens (p = 0.001), AvgCxDens (p = 0.008)
+anova.cca(ord,by="term") #TotTreat (p = 0.002), PercTreat (p = 0.138), PercAeFnd (p = 0.030), AvgAnDens (p = 0.001), AvgCxDens (p = 0.008)
 
 cap <- capscale(as.dist(bac_bnti1) ~ .,data=as.data.frame(space2))
-ord <- ordistep(cap) #PCNM2, 3, 4, 11, 30, 33
-anova(ord) #p = 0.003
-anova.cca(ord, by="margin") #PCNM3 (p = 0.043), PCNM11 (p = 0.042) 
+ord <- ordistep(cap) #PCNM2, 3, 4, 11, 17, 30, 33
+anova(ord) #p = 0.002
+anova.cca(ord, by="margin") #PCNM2 (p = 0.087), PCNM3 (p = 0.047), PCNM4 (p = 0.061), PCNM11 (p = 0.050), PCNM17 (p = 0.139), PCNM30 (p = 0.051), PCNM33 (p = 0.073) 
 
 env_vp4 <- env_vp3[,1]
 prod_vp5 <- prod_vp4[,c(1,2,3,8,9)]
-space3 <- space2[,c(2,3,4,11,30,33)]
+space3 <- space2[,c(2:4,11,17,30,33)]
 varpart_16s <- varpart(as.dist(bac_bnti1),env_vp4,prod_vp5,space3)
 varpart_16s
 plot(varpart_16s)
@@ -163,25 +161,10 @@ ord5 <- capscale(as.dist(bac_bnti1)~as.matrix(prod_vp5)+as.matrix(space3))
 anova(ord5) #p = 0.001
 
 vars <- cbind(prod_vp5, space3)
-ord6 <- capscale(as.dist(bac_bnti1)~vars$TotTreat+vars$PercTreat+vars$PercAeFnd+vars$AvgAnDens+vars$AvgCxDens+Condition(vars$PCNM2+vars$PCNM3+vars$PCNM4+vars$PCNM11+vars$PCNM30+vars$PCNM33))
+ord6 <- capscale(as.dist(bac_bnti1)~vars$TotTreat+vars$PercTreat+vars$PercAeFnd+vars$AvgAnDens+vars$AvgCxDens+Condition(vars$PCNM2+vars$PCNM3+vars$PCNM4+vars$PCNM11+vars$PCNM17+vars$PCNM30+vars$PCNM33))
 anova(ord6) #p = 0.001
-anova.cca(ord6, by="term") #TotTreat (p = 0.001), PercTreat (p = 0.166), PercAeFnd (p = 0.232), AvgAnDens (p = 0.001), AvgCxDens (p = 0.004) 
+anova.cca(ord6, by="term") #TotTreat (p = 0.002), PercTreat (p = 0.240), PercAeFnd (p = 0.162), AvgAnDens (p = 0.001), AvgCxDens (p = 0.001) 
 
-ord7 <- capscale(as.dist(bac_bnti1)~vars$PCNM2+vars$PCNM3+vars$PCNM4+vars$PCNM11+vars$PCNM30+vars$PCNM33+Condition(vars$TotTreat+vars$PercTreat+vars$PercAeFnd+vars$AvgAnDens+vars$AvgCxDens))
+ord7 <- capscale(as.dist(bac_bnti1)~vars$PCNM2+vars$PCNM3+vars$PCNM4+vars$PCNM11+vars$PCNM17+vars$PCNM30+vars$PCNM33+Condition(vars$TotTreat+vars$PercTreat+vars$PercAeFnd+vars$AvgAnDens+vars$AvgCxDens))
 anova(ord7) #p = 0.002
-anova.cca(ord7, by="term") #PCNM2 (p = 0.231), PCNM3 (p = 0.118), PCNM4 (p = 0.044), PCNM11 (p = 0.049), PCNM30 (p = 0.198), PCNM33 (p = 0.056)
-
-a <- plot(x=coords$lat, y=coords$lon, data=coords)
-ordisurf(coords[,c(2:3)],space2[,4],bubble=4,main='PCNM 4')
-ordisurf(coords[,c(2:3)],space2[,33],bubble=4,main='PCNM 33')
-
-coords.new=coords[,c(1,3,2)]
-require(sp)
-tempsf <- coords[, 2:3]
-coordinates(tempsf) <- c("latitude","longitude")
-proj4string(tempsf) = "+proj=longlat +ellps=WGS84 +no_defs"
-max(spDists(tempsf))
-min(spDists(tempsf))
-dist <- spDists(as.matrix(coords.new[,2:3]), longlat = TRUE)
-write.csv(dist,"pairwise-dist.csv",row.names = coords.new[,1])
-write.csv(assem_bac$result,"pairwise-bnti.csv",row.names = FALSE)
+anova.cca(ord7, by="term") #PCNM2 (p = 0.231), PCNM3 (p = 0.096), PCNM4 (p = 0.027), PCNM11 (p = 0.047), PCNM17 (p = 0.149), PCNM30 (p = 0.133), PCNM33 (p = 0.046)
