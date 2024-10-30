@@ -1,3 +1,5 @@
+set.seed(123)
+
 library(getPass)           
 library(httr)              
 library(jsonlite)          
