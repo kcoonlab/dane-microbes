@@ -15,6 +15,8 @@ library(tidyr)
 library(Matrix)
 library(caret)
 library(GGally)
+library(vegan)
+library(iCAMP)
 
 #Variance partitioning 
 
