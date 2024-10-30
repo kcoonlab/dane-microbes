@@ -17,6 +17,7 @@ library(caret)
 library(GGally)
 library(vegan)
 library(iCAMP)
+library(biom)
 
 #Variance partitioning 
 
@@ -54,6 +55,11 @@ space <- pcnm(coords2)
 space2 <- space$vectors
 #write.csv(space2,"pcnm-vectors.csv",row.names = coords[,1])
 
+Bac_otus<-"exported/feature-table.biom"
+x1<-read_biom(Bac_otus)
+meta<-read.csv("metadata3.csv")
+bac<-as(biom_data(x1),"matrix")
+bac<-t(bac)
 assem_bac<-qpen(comm = bac, pd = phydist, pd.big.wd = NULL,
                   pd.big.spname = NULL, tree = NULL,
                   bNTI = NULL, RC = NULL, ab.weight = TRUE,
