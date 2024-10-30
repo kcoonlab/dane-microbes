@@ -20,7 +20,6 @@ library(ggplot2)
 library(ggmap)
 library(maps)
 library(mapdata)
-register_google(key = "AIzaSyBxYNOj8Cv7e25nm0k3MvXy2U3IxjBW18c")
 
 states=map_data("state")
 counties=map_data("county")
