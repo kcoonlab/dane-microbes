@@ -13,8 +13,6 @@ library(reshape2)
 
 ## Fig 2A
 
-#biom convert -i exported/feature-table.biom -o exported/feature-table-json.biom --to-json 
-
 Bac_otus<-"exported/feature-table.biom"
 x1<-read_biom(Bac_otus)
 meta<-read.csv("metadata3.csv")
