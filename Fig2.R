@@ -7,6 +7,7 @@ library(caret)
 library(phytools)
 library(car)
 library(ggplot2)
+library(reshape2)
 
 ## Fig 2A
 
@@ -244,7 +245,7 @@ t_s_d=nrow(two_assem_result)
 
 prop.test(c(n_s_r,n_s_d),c(t_s_r,t_s_d)) #Significant (p < 0.0001; Biotype 1 overall higher than Biotype 2)!
 
-#Hetero selection
+#Variable selection
 
 n_hs_r=sum(one_assem_result$process == "Heterogeneous.Selection")
 t_hs_r=nrow(one_assem_result)
@@ -253,7 +254,7 @@ t_hs_d=nrow(two_assem_result)
 
 prop.test(c(n_hs_r,n_hs_d),c(t_hs_r,t_hs_d)) #Significant (p = 0.01302; Biotype 1 higher than Biotype 2)!
 
-#Homo selection
+#Homogeneous selection
 
 n_hs_r=sum(one_assem_result$process == "Homogeneous.Selection")
 t_hs_r=nrow(one_assem_result)
@@ -262,7 +263,7 @@ t_hs_d=nrow(two_assem_result)
 
 prop.test(c(n_hs_r,n_hs_d),c(t_hs_r,t_hs_d)) #Significant (p = 0.0001444; Biotype 1 overall higher than Biotype 2)!
 
-#Homo dispersal
+#Homogenizing dispersal
 
 n_hd_r=sum(one_assem_result$process == "Homogenizing.Dispersal")
 t_hd_r=nrow(one_assem_result)
@@ -273,7 +274,7 @@ library(stats)
 A = matrix(c(n_hd_r,n_hs_d,(t_hs_r-n_hs_r), (t_hs_d-n_hs_d)), nrow = 2)
 fisher.test(A) #Significant (p = 0.008049)!
 
-#Dispersal Limitation
+#Dispersal limitation
 
 n_dl_r=sum(one_assem_result$process == "Dispersal.Limitation")
 t_dl_r=nrow(one_assem_result)
@@ -292,9 +293,6 @@ t_d_d=nrow(two_assem_result)
 prop.test(c(n_d_r,n_d_d),c(t_d_r,t_d_d)) #Significant (p = 0.001381; Biotype 2 overall higher than Biotype 1)!
 
 #Bar plots
-
-library(reshape2)
-library(ggplot2)
 
 bac_assem<-rbind(one_assem_ratio,two_assem_ratio)
 bac_assem2<-melt(bac_assem,id.vars=c("Biotype"))
