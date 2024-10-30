@@ -12,8 +12,6 @@ library(rasterVis)
 library(ggplot2)          
 library(RColorBrewer)  
 
-API_URL = 'https://lpdaacsvc.cr.usgs.gov/appeears/api/'
-
 user <- getPass(msg = "Enter NASA Earthdata Login Username: ")    
 
 password <- getPass(msg = "Enter NASA Earthdata Login Password: ")  
@@ -573,78 +571,3 @@ df$AvgGpp[is.nan(df$AvgGpp)]<-NA
 df$AvgNpp[is.nan(df$AvgNpp)]<-NA
 
 write.csv(df,"env-data/MODIS/curr-env-data-by-site-year.csv",row.names = FALSE)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
