@@ -14,7 +14,33 @@ library(factoextra)
 library(BiotypeR)
 library(ade4)
 
-## Fig. 1B
+## Fig 1A
+
+library(ggplot2)
+library(ggmap)
+library(maps)
+library(mapdata)
+register_google(key = "AIzaSyBxYNOj8Cv7e25nm0k3MvXy2U3IxjBW18c")
+
+states=map_data("state")
+counties=map_data("county")
+dane_county=counties[which(counties$region=="wisconsin" & counties$subregion=="dane"),]
+us_base=ggplot(data=states,mapping=aes(x=long,y=lat,group=group)) + 
+  coord_fixed(1.3) + 
+  geom_polygon(color="black",fill="gray")
+us_base + theme_nothing()
+us_base + theme_nothing() + 
+  geom_polygon(data=dane_county,aes(x=long,y=lat,fill="orange"),color="white")
+
+dane.data=read.csv("alpha-div.csv",header=TRUE)
+dane.data=subset(dane.data,select=-c(Hclust,faith_pd,observed_features,inv_simpson,cfus_per_ml))
+ll_means=sapply(dane.data[2:3],mean)
+dane_map=get_map(location=ll_means,maptype="terrain-background",source="google",zoom=10)
+ggmap(dane_map) + 
+  geom_point(data=dane.data,color="red",size=4) +
+  geom_text(data=dane.data,aes(label=paste("  ",as.character(AreaNumb),sep="")),angle=60,hjust=0,color="yellow")
+
+## Fig 1B
 
 data=read.csv("level2-taxa.csv",header=TRUE)
 cbPalette=hcl.colors(8,palette="RdYlBu")
