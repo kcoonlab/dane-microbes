@@ -1,5 +1,7 @@
 setwd("/Users/kerricoon/Library/CloudStorage/Box-Box/Projects/Dane-Redo-Master-Complete/Dane-Redo-Master")
 
+set.seed(123)
+
 library(ggplot2)
 library(Rmisc)
 library(cluster)
