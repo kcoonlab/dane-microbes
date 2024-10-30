@@ -11,7 +11,7 @@ Scripts for each analysis are written in R. Each directory contains necessary fi
 
 **Example**
 * Create a new project in RStudio. To run the script to recreate Fig. 1 in the manuscript: 
-	* Navigate to the terminal window and `git clone https://github.com/kcoonlab/catch-basin-microbes`.
+	* Navigate to the terminal window and `git clone https://github.com/kcoonlab/dane-microbes`.
 	* Open the script `Fig1.R` from the files panel window.
 	* Install required packages. 
 	* `cmd enter` from line `1`.
