@@ -1,3 +1,5 @@
+## Sequences are available here: XXX
+
 conda activate qiime2-2021.11
 
 qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' \
@@ -29,6 +31,10 @@ qiime feature-table filter-samples \
   --m-metadata-file metadata.txt \
   --p-where "[keep]='1'" \
   --o-filtered-table filtered-table.qza
+
+source deactivate
+
+## Run the following in R
 
 library(qiime2R)
 library(phyloseq)
