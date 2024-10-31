@@ -1,1 +1,158 @@
+conda activate qiime2-2021.11
 
+qiime tools import --type 'SampleData[PairedEndSequencesWithQuality]' \
+ --input-path manifest.txt \
+ --output-path demux.qza \
+ --input-format PairedEndFastqManifestPhred33
+
+qiime cutadapt trim-paired \
+  --i-demultiplexed-sequences demux.qza \
+  --p-front-f GTGCCAGCMGCCGCGGTAA \
+  --p-front-r GGACTACHVGGGTWTCTAAT \
+  --o-trimmed-sequences primer-trimmed-demux.qza
+  
+qiime demux summarize \
+  --i-data primer-trimmed-demux.qza \
+  --o-visualization primer-trimmed-demux.qzv
+
+qiime dada2 denoise-paired \
+  --i-demultiplexed-seqs primer-trimmed-demux.qza \
+  --p-trunc-len-f 249 \
+  --p-trunc-len-r 244 \
+  --p-n-threads 0 \
+  --o-table table \
+  --o-representative-sequences rep-seqs \
+  --o-denoising-stats denoise-stats \
+
+qiime feature-table filter-samples \
+  --i-table table.qza \
+  --m-metadata-file metadata.txt \
+  --p-where "[keep]='1'" \
+  --o-filtered-table filtered-table.qza
+
+library(qiime2R)
+library(phyloseq)
+library(decontam)
+
+ASVs=read_qza("filtered-table.qza")
+metadata=read_q2metadata("metadata2.txt")
+taxonomy=read_qza("training-feature-classifiers/taxonomy.qza")
+phyloseq=qza_to_phyloseq(
+    features="filtered-table.qza",
+    tree="rooted-tree.qza",
+    "training-feature-classifiers/taxonomy.qza",
+    metadata = "metadata2.txt"
+    )
+
+contam.freq=isContaminant(phyloseq,method="frequency",conc="quant_reading",threshold=0.5)
+contaminants=contam.freq[which(contam.freq$contaminant=="TRUE"),]
+write.csv(contaminants,"features-to-discard.csv", row.names = TRUE)
+
+qiime feature-table filter-features \
+  --i-table feature-filtered-table.qza \
+  --m-metadata-file features-to-discard.txt \
+  --p-exclude-ids \
+  --o-filtered-table feature-filtered-table.qza
+
+qiime feature-table filter-samples \
+  --i-table feature-filtered-table.qza \
+  --m-metadata-file metadata2.txt \
+  --p-where "[keep]=1" \
+  --o-filtered-table sample-feature-filtered-table.qza
+
+qiime feature-table group \
+  --i-table sample-feature-filtered-table.qza \
+  --p-axis sample \
+  --m-metadata-file metadata2.txt \
+  --m-metadata-column site \
+  --p-mode sum \
+  --o-grouped-table reindexed-table.qza
+  
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences rep-seqs.qza \
+  --p-n-threads auto \
+  --o-alignment aligned-rep-seqs.qza \
+  --o-masked-alignment masked-aligned-rep-seqs.qza \
+  --o-tree unrooted-tree.qza \
+  --o-rooted-tree rooted-tree.qza \
+
+mkdir training-feature-classifiers
+cd training-feature-classifiers
+
+qiime tools import \
+  --type 'FeatureData[Sequence]' \
+  --input-path gg_13_8_otus/rep_set/99_otus.fasta \
+  --output-path 99_otus.qza
+
+qiime tools import \
+  --type 'FeatureData[Taxonomy]' \
+  --input-format HeaderlessTSVTaxonomyFormat \
+  --input-path gg_13_8_otus/taxonomy/99_otu_taxonomy.txt \
+  --output-path ref-taxonomy.qza
+
+qiime feature-classifier extract-reads \
+  --i-sequences 99_otus.qza \
+  --p-f-primer GTGCCAGCMGCCGCGGTAA \
+  --p-r-primer GGACTACHVGGGTWTCTAAT \
+  --o-reads ref-seqs.qza
+
+qiime feature-classifier fit-classifier-naive-bayes \
+  --i-reference-reads ref-seqs.qza \
+  --i-reference-taxonomy ref-taxonomy.qza \
+  --o-classifier classifier.qza
+
+cd ../
+
+qiime feature-classifier classify-sklearn \
+  --i-classifier training-feature-classifiers/classifier.qza \
+  --i-reads rep-seqs.qza \
+  --o-classification training-feature-classifiers/taxonomy.qza
+
+qiime metadata tabulate \
+  --m-input-file training-feature-classifiers/taxonomy.qza \
+  --o-visualization training-feature-classifiers/taxonomy.qzv
+
+qiime taxa filter-table \
+  --i-table reindexed-table.qza \
+  --i-taxonomy training-feature-classifiers/taxonomy.qza \
+  --p-exclude k__Archaea,c__Chloroplast,f__mitochondria \
+  --o-filtered-table taxa-filtered-reindexed-table.qza
+
+qiime feature-table summarize \
+  --i-table taxa-filtered-reindexed-table.qza \
+  --o-visualization taxa-filtered-reindexed-table.qzv
+
+qiime feature-table filter-samples \
+  --i-table taxa-filtered-reindexed-table.qza \
+  --p-min-frequency 1000 \
+  --o-filtered-table analysis-table.qza
+
+#Try above after filtering ASVs that don't achieve 0.5% relative abundance threshold in at least one sample? Also-- remember to rarefy the table first!
+
+qiime feature-table relative-frequency \
+  --i-table analysis-table.qza \
+  --o-relative-frequency-table rel-analysis-table.qza
+
+qiime tools export \
+  --input-path rel-analysis-table.qza \
+  --output-path exported
+
+biom convert -i exported/feature-table.biom -o rel-analysis-table.tsv --to-tsv
+
+qiime feature-table filter-features \
+  --i-table analysis-table.qza \
+  --m-metadata-file features-to-keep2.txt \
+  --o-filtered-table feature-filtered-analysis-table.qza
+
+qiime feature-table rarefy \
+  --i-table feature-filtered-analysis-table.qza \
+  --p-sampling-depth 958 \
+  --o-rarefied-table rarefied-feature-filtered-analysis-table.qza
+
+qiime tools export \
+  --input-path rarefied-feature-filtered-analysis-table.qza \
+  --output-path exported
+
+qiime tools export \
+  --input-path training-feature-classifiers/taxonomy.qza \
+  --output-path exported
