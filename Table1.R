@@ -9,6 +9,10 @@ set.seed(123)
 # Delete package tarball
 #unlink(pkgFile)
 
+#if (!require("BiocManager", quietly = TRUE))
+#    install.packages("BiocManager")
+#BiocManager::install("biomformat")
+
 library(Imap)
 library(gtools)
 library(tidyr)
@@ -19,7 +23,6 @@ library(vegan)
 library(iCAMP)
 library(biomformat)
 library(ape)
-library(caret)
 library(corpcor)
 
 #Variance partitioning 
