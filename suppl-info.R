@@ -4,23 +4,30 @@ library(PMCMRplus)
 library(ggplot2)
 library(ggpubr)
 
+## Fig S1
+
 ## Fig S1A
 
-prod <- read.csv("GitHub-files/hist-data.csv")
-hist(prod$PercLarvFnd)
+data <- read.csv("Hist-Master.csv",header=TRUE)
+data=subset(data,select=-c(DipID,SampDate,Year))
+sum.by.site=aggregate(.~AreaNumb,data,function(x) sum(x,na.rm=TRUE),na.action=na.pass)
+sum.by.site=sum.by.site[order(sum.by.site$AreaNumb),]
+sum.by.site[is.na(sum.by.site)]=0  
+sum.by.site$PropLarvFnd=sum.by.site$LarvFnd/sum.by.site$SiteVis
+hist(sum.by.site$PropLarvFnd)
 
 ## Fig S1B
 
-ggscatter(prod,x="PercLarvFnd",y="AvgLarvDens",add="reg.line",conf.int=FALSE,cor.coef=FALSE,cor.method="spearman")
-cor.test(prod$PercLarvFnd, prod$AvgLarvDens, method="spearman")
+sum.by.site$LarvDens = sum.by.site$TotCnt/sum.by.site$NumDips
+sum.by.site[is.na(sum.by.site)]=0  
+ggscatter(sum.by.site,x="PropLarvFnd",y="LarvDens",add="reg.line",conf.int=FALSE,cor.coef=FALSE,cor.method="spearman")
+cor.test(sum.by.site$PropLarvFnd, sum.by.site$LarvDens, method="spearman")
 
 ## Fig S1C
                       
-prod2 <- read.csv("Hist-Master-Final.csv",header=TRUE)
-prod3 <- prod2[which(prod2$Posttreat==0&prod2$LarvFnd==1),]
-prod4 <- prod3[which(prod3$LarvDiv>0),]
-prod4$LarvDivPerDip <- prod4$LarvDiv/prod4$NumDips
-hist(prod4$LarvDivPerDip)
+data <- read.csv("Hist-Master.csv",header=TRUE)
+data2 <- data[which(data$LarvDiv>0),]
+hist(data2$LarvDiv)    
 
 ## Fig S2
 
