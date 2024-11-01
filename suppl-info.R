@@ -19,7 +19,8 @@ cor.test(prod$PercLarvFnd, prod$AvgLarvDens, method="spearman")
 prod2 <- read.csv("Hist-Master-Final.csv",header=TRUE)
 prod3 <- prod2[which(prod2$Posttreat==0&prod2$LarvFnd==1),]
 prod4 <- prod3[which(prod3$LarvDiv>0),]
-hist(prod4$LarvDiv)
+prod4$LarvDivPerDip <- prod4$LarvDiv/prod4$NumDips
+hist(prod4$LarvDivPerDip)
 
 ## Fig S2
 
