@@ -71,4 +71,27 @@ ggplot(data,aes(x=Hclust,y=log10(cfus_per_ml),fill=as.factor(Hclust)))+geom_boxp
 
 ## Fig S5
 
+## TotTreat by biotype
 
+prod <- read.csv("GitHub-files/hist-data.csv")
+test <- kruskalTest(TotTreat ~ as.factor(Hclust), data = prod)
+test #Significant (p = 0.04583)
+ggplot(prod,aes(x=Hclust,y=TotTreat,fill=as.factor(Hclust)))+geom_boxplot(outlier.shape=NA)
+
+## PercAeFnd by biotype
+
+test2 <- kruskalTest(PercAeFnd ~ as.factor(Hclust), data = prod)
+test2 #Significant (p = 0.002423)
+ggplot(prod,aes(x=Hclust,y=PercAeFnd,fill=as.factor(Hclust)))+geom_boxplot(outlier.shape=NA)
+
+## AvgAnDens by biotype
+
+test3 <- kruskalTest(AvgAnDens ~ as.factor(Hclust), data = prod)
+test3 #Not significant (p = 0.06551)
+ggplot(prod,aes(x=Hclust,y=AvgAnDens,fill=as.factor(Hclust)))+geom_boxplot(outlier.shape=NA)
+
+## AvgCxDens by biotype
+
+test4 <- kruskalTest(AvgCxDens ~ as.factor(Hclust), data = prod)
+test4 #Not significant (p = 0.1417)
+ggplot(prod,aes(x=Hclust,y=AvgCxDens,fill=as.factor(Hclust)))+geom_boxplot(outlier.shape=NA)
